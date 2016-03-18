@@ -12,14 +12,16 @@
 #define Y_AXIS vexRT[Ch3]
 #define STRAFE vexRT[Ch4]
 
+#define HOLONOMIC
+
 typedef struct Encoder {
 	int val,
 		valLast,
 		delta;
 	tSensors name;
-} enc;
+} Enc;
 
-enc fl,
+Enc fl,
 	bl,
 	br,
 	fr;
@@ -28,45 +30,48 @@ const float convertToRadians = PI / 180;
 	
 float x = 0,
 	y = 0,
-	r = 0;
+	theta = 0;
 
+void updateEnc(Enc *enc) {
+	enc->valLast = enc->val;
+	enc->val = SensorValue[enc->name];
+	enc->delta = enc->val - enc->valLast;
+}
+	
 task main()	{
 
 	fl.name = flEnc;
 	bl.name = blEnc;
 	br.name = brEnc;
 	fr.name = frEnc;
-	
-	fl.valLast =
-		bl.valLast =
-		br.valLast =
-		fr.valLast =
-		fr.val =
-		bl.val =
-		br.val =
-		fr.val =
-		0;
 
 	while(true) {
 
-		fl.valLast = fl.val;
-		bl.valLast = bl.val;
-		br.valLast = br.val;
-		fr.valLast = fr.val;
+		updateEnc(&fl);
+		updateEnc(&bl);
+		updateEnc(&br);
+		updateEnc(&fr);
 
-		fl.val = SensorValue[fl.name];
-		bl.val = SensorValue[bl.name];
-		br.val = SensorValue[br.name];
-		fr.val = SensorValue[fr.name];
-
+		
+#ifdef HOLONOMIC
 		motor[flWheel] = Y_AXIS + ROT + STRAFE;
 		motor[frWheel] = Y_AXIS - ROT - STRAFE;
 		motor[blWheel] = Y_AXIS + ROT - STRAFE;
 		motor[brWheel] = Y_AXIS - ROT + STRAFE;
-
-		r += ((fl.delta + bl.delta) - (fr.delta + br.delta)) / 2;
+#else
+		motor[flWheel] =
+			motor[blWheel] =
+			Y_AXIS + ROT;
+		motor[frWheel] =
+			motor[brWheel] =
+			Y_AXIS - ROT;
+#endif
+			
+		theta += ((fl.delta + bl.delta) - (fr.delta + br.delta)) / 2;
 		
-		y += sin(r * convertToRadians) * (fl.delta + bl.delta + fr.delta + br.delta) / 4;
+		y += sin(theta * convertToRadians) * ((fl.delta + bl.delta + fr.delta + br.delta) / 4);
+		
+		x += cos(theta * convertToRadians) * ((fl.delta + bl.delta + fr.delta + br.delta) / 4);
 		
 		wait1Msec(20);
 	}
