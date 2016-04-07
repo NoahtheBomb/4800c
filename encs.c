@@ -66,7 +66,10 @@ task main()	{
 			motor[brWheel] =
 			Y_AXIS - ROT;
 #endif
-			
+		
+		displayLCDCenteredString(0, "Left: %f", (fl.val + bl.val) / 2);
+		displayLCDCenteredString(1, "Right: %f", (fr.val + br.val) / 2);
+		
 		theta += ((fl.delta + bl.delta) - (fr.delta + br.delta)) / 2;
 		
 		y += sin(theta * convertToRadians) * ((fl.delta + bl.delta + fr.delta + br.delta) / 4);
