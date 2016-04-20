@@ -27,7 +27,7 @@ Enc fl,
 	fr;
 
 const float convertToRadians = PI / 180;
-	
+
 float x = 0,
 	y = 0,
 	theta = 0;
@@ -37,8 +37,9 @@ void updateEnc(Enc *enc) {
 	enc->val = SensorValue[enc->name];
 	enc->delta = enc->val - enc->valLast;
 }
-	
+
 task main()	{
+	string str;
 
 	fl.name = flEnc;
 	bl.name = blEnc;
@@ -52,7 +53,7 @@ task main()	{
 		updateEnc(&br);
 		updateEnc(&fr);
 
-		
+
 #ifdef HOLONOMIC
 		motor[flWheel] = Y_AXIS + ROT + STRAFE;
 		motor[frWheel] = Y_AXIS - ROT - STRAFE;
@@ -66,16 +67,17 @@ task main()	{
 			motor[brWheel] =
 			Y_AXIS - ROT;
 #endif
-		
-		displayLCDCenteredString(0, "Left: %f", (fl.val + bl.val) / 2);
-		displayLCDCenteredString(1, "Right: %f", (fr.val + br.val) / 2);
-		
+		sprintf(&str, "Left: %3.3f", (fl.val + bl.val) / 2.);
+		displayLCDCenteredString(0, str);
+		sprintf(&str, "Right: %3.3f", (fr.val + br.val) / 2.);
+		displayLCDCenteredString(1, str);
+
 		theta += ((fl.delta + bl.delta) - (fr.delta + br.delta)) / 2;
-		
+
 		y += sin(theta * convertToRadians) * ((fl.delta + bl.delta + fr.delta + br.delta) / 4);
-		
+
 		x += cos(theta * convertToRadians) * ((fl.delta + bl.delta + fr.delta + br.delta) / 4);
-		
+
 		wait1Msec(20);
 	}
 }
